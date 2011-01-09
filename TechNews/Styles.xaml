@@ -12,4 +12,8 @@
             </Grid>
         </StackPanel>
     </DataTemplate>
+	
+	<DataTemplate x:Key="PivotItemTemplate">
+			<ListBox HorizontalAlignment="Stretch" DataContext="{Binding Source={StaticResource Locator}}" ItemsSource="{Binding Main.FeedItems}" ItemTemplate="{StaticResource FeedItemSummaryStyle}" />
+		</DataTemplate>
 </ResourceDictionary>

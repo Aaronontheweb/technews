@@ -7,15 +7,15 @@ namespace TechNews.Model
 {
     public class LocalFeedLocationService : IFeedLocationService
     {
-        public IList<Uri> GetFeeds()
+        public IList<ParentFeed> GetFeeds()
         {
-            var returnList = new List<Uri>
+            var returnList = new List<ParentFeed>
                                  {
-                                     new Uri("http://feedproxy.google.com/TechCrunch"),
-                                     new Uri("http://news.ycombinator.com/rss"),
-                                     new Uri("http://feeds.feedburner.com/ommalik"),
-                                     new Uri("http://feeds.venturebeat.com/Venturebeat"),
-                                     new Uri("http://feeds.feedburner.com/readwriteweb")
+                                     new ParentFeed{FeedUri = new Uri("http://feedproxy.google.com/TechCrunch"), Link = "http://www.techcrunch.com/", Title = "TechCrunch"},
+                                     new ParentFeed{FeedUri = new Uri("http://news.ycombinator.com/rss"), Link = "http://news.ycombinator.com/", Title = "Hacker News"},
+                                     new ParentFeed{FeedUri =  new Uri("http://feeds.feedburner.com/ommalik"), Link = "http://gigaom.com/", Title = "GigaOm"},
+                                     new ParentFeed{FeedUri = new Uri("http://feeds.venturebeat.com/Venturebeat"), Link = "http://www.venturebeat.com/", Title = "VentureBeat"},
+                                     new ParentFeed{FeedUri =  new Uri("http://feeds.feedburner.com/readwriteweb"), Link="http://www.readwriteweb.com/", Title = "ReadWriteWeb"}
                                  };
 
             return returnList;

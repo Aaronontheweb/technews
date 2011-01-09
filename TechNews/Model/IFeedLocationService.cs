@@ -5,6 +5,6 @@ namespace TechNews.Model
 {
     public interface IFeedLocationService
     {
-        IList<Uri> GetFeeds();
+        IList<ParentFeed> GetFeeds();
     }
 }

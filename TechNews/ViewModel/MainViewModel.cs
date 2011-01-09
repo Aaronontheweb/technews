@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Threading;
@@ -27,65 +31,137 @@ namespace TechNews.ViewModel
         private readonly IFeedLocationService _feedLocator;
         private readonly IFeedQueryService _queryService;
 
+
         //Used for quick and easy computation
-        private IList<FeedItemSummary> RawFeedItems { get; set; }
-        public ObservableCollection<FeedItemSummary> FeedItems { get; private set; }
+
+        private bool _isLoading;
+
+        public bool IsLoading
+        {
+            get { return _isLoading; }
+            set
+            {
+                _isLoading = value;
+                RaisePropertyChanged("IsLoading");
+                RaisePropertyChanged("IsProgressBarVisible");
+            }
+        }
+        public Visibility IsProgressBarVisible
+        {
+            get
+            {
+                return IsLoading ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private ObservableCollection<FeedItemSummary> _feedItems;
+        private ObservableCollection<string> _feedTitles;
+        private IList<ParentFeed> _feeds;
+
+        public ObservableCollection<string> FeedTitles { get { return _feedTitles; } set { _feedTitles = value; RaisePropertyChanged("FeedTitles"); } }
+
+        public IList<ParentFeed> Feeds { get { return _feeds; } set { _feeds = value; RaisePropertyChanged("Feeds"); } }
+
+        public ObservableCollection<FeedItemSummary> FeedItems
+        {
+            get { return _feedItems; }
+            set
+            {
+                _feedItems = value;
+                RaisePropertyChanged("FeedItems");
+            }
+        }
 
         #region Commands
 
-        public RelayCommand QueryFeeds { get; private set; }
+        public RelayCommand<SelectionChangedEventArgs> QueryFeed { get; private set; }
 
-        #endregion 
+        public RelayCommand LoadTechCrunch { get; private set; }
+
+        #endregion
 
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
         public MainViewModel()
         {
+            _feedLocator = new LocalFeedLocationService();
+            Feeds = _feedLocator.GetFeeds();
+            FeedTitles = new ObservableCollection<string>();
+
+            PopulateFeedTitles();
+
             FeedItems = new ObservableCollection<FeedItemSummary>();
-            RawFeedItems = new List<FeedItemSummary>();
 
             if (IsInDesignMode)
             {
                 // Code runs in Blend --> create design time data.
-                PopulateFeedItems(FeedSummarizer.SummarizeFeeds(DesignTimeData.Feeds));
+                var designFeed = FeedSummarizer.SummarizeFeed(DesignTimeData.Feeds.First());
+
+                foreach (var item in designFeed)
+                {
+                    FeedItems.Add(item);
+                }
             }
             else
             {
                 // Code runs "for real"
-                _feedLocator = new LocalFeedLocationService();
+
                 _queryService = new FeedQueryService(new HttpFeedFactory());
-                QueryFeeds = new RelayCommand(() =>
-                                                  {
-                                                      foreach (var feed in _feedLocator.GetFeeds())
-                                                      {
-                                                          _queryService.BeginQueryFeeds(feed, async =>
-                                                                                                  {
-                                                                                                      var feedResult =
-                                                                                                          _queryService.
-                                                                                                              EndQueryFeeds
-                                                                                                              (async);
-                                                                                                      DispatcherHelper.CheckBeginInvokeOnUI(() => AppendFeed(feedResult));
-                                                                                                  });
-                                                      }
-                                                  });
-                
+                QueryFeed = new RelayCommand<SelectionChangedEventArgs>(FindFeedAndExecuteQuery);
+                LoadTechCrunch = new RelayCommand(() => ExecuteQuery(Feeds[0]));
             }
         }
 
-        public void AppendFeed(IFeed feeds)
+        private void FindFeedAndExecuteQuery(SelectionChangedEventArgs args)
         {
-            var feedItems = FeedSummarizer.SummarizeFeeds(new[] {feeds});
-            RawFeedItems = FeedSummarizer.MergeFeedItems(RawFeedItems, feedItems);
-            PopulateFeedItems(RawFeedItems);
+            if (args == null) return;
+            var selected = args.AddedItems[0];
+            var feed = Feeds.Single(x => x.Title.Equals(selected));
+
+            ExecuteQuery(feed);
         }
 
-        public void PopulateFeedItems(IList<FeedItemSummary> summaries)
+        private void ExecuteQuery(ParentFeed feed)
         {
-            FeedItems.Clear();
-            foreach (var item in summaries)
+            IsLoading = true;
+            _queryService.BeginQueryFeeds(feed.FeedUri, async =>
+                                                            {
+                                                                var feedResult = _queryService.EndQueryFeeds(async);
+                                                                DispatcherHelper.CheckBeginInvokeOnUI(() => PopulateFeedItems
+                                                                                                                (FeedSummarizer
+                                                                                                                     .
+                                                                                                                     SummarizeFeed
+                                                                                                                     (feedResult,
+                                                                                                                      itemCount
+                                                                                                                          :
+                                                                                                                          feedResult
+                                                                                                                          .
+                                                                                                                          Items
+                                                                                                                          .
+                                                                                                                          Count)));
+
+                                                            });
+        }
+
+        private void PopulateFeedItems(IEnumerable<FeedItemSummary> summaries)
+        {
+            var items = new ObservableCollection<FeedItemSummary>();
+            foreach (var summary in summaries)
             {
-                FeedItems.Add(item);
+                items.Add(summary);
+            }
+
+            FeedItems = items;
+
+            IsLoading = false;
+        }
+
+        private void PopulateFeedTitles()
+        {
+            foreach (var item in Feeds)
+            {
+                FeedTitles.Add(item.Title);
             }
         }
 

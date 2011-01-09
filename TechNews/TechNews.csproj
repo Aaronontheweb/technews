@@ -58,6 +58,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files\Laurent Bugnion (GalaSoft)\Mvvm Light Toolkit\Binaries\WP7\GalaSoft.MvvmLight.Extras.WP7.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Phone.Controls" />
     <Reference Include="QDFeedParser.Mobile">
       <HintPath>..\..\..\qdrss-releases\qdrss 1.0\bin\Windows Phone 7\Release\QDFeedParser.Mobile.dll</HintPath>
     </Reference>
@@ -85,6 +86,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BrowserPage.xaml.cs">
+      <DependentUpon>BrowserPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Design\DesignTimeData.cs" />
     <Compile Include="Helpers\FeedSummarizer.cs" />
     <Compile Include="MainPage.xaml.cs">
@@ -104,6 +108,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="BrowserPage.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
