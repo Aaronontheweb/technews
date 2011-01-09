@@ -14,7 +14,7 @@
                             d:DesignWidth="480"
                             d:DesignHeight="768"
                             shell:SystemTray.IsVisible="True"
-                            DataContext="{Binding Main, Source={StaticResource Locator}}">
+                            DataContext="{Binding Main, Source={StaticResource Locator}}" Loaded="PhoneApplicationPage_Loaded">
 
 	<!--LayoutRoot contains the root grid where all other page content is placed-->
 	<Grid x:Name="LayoutRoot"
@@ -37,13 +37,9 @@
 		<!--ContentPanel - place additional content here-->
 		<Grid x:Name="ContentGrid"
 		      Grid.Row="1">
-
-			<TextBlock Text="{Binding Welcome}"
-			           Style="{StaticResource PhoneTextNormalStyle}"
-			           HorizontalAlignment="Center"
-			           VerticalAlignment="Center"
-			           FontSize="40" />
-
+			<ListBox x:Name="RSSFeedListBox" HorizontalAlignment="Center" Margin="8,8,0,0" 
+                     ItemsSource="{Binding FeedItems}" ItemTemplate="{StaticResource FeedItemSummaryStyle}">	
+			</ListBox>
 		</Grid>
 	</Grid>
     

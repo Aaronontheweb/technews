@@ -9,5 +9,10 @@ namespace TechNews
         {
             InitializeComponent();
         }
+
+        private void PhoneApplicationPage_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ViewModel.ViewModelLocator.MainStatic.QueryFeeds.Execute(null);
+        }
     }
 }

@@ -10,9 +10,14 @@
 
     <!--Application Resources-->
     <Application.Resources>
-        <vm:ViewModelLocator x:Key="Locator"
-                             d:IsDataSource="True" />
-        <clr:String x:Key="AppName">TechReads</clr:String>
+    	<ResourceDictionary>
+    		<ResourceDictionary.MergedDictionaries>
+    			<ResourceDictionary Source="Styles.xaml"/>
+    		</ResourceDictionary.MergedDictionaries>
+    		<vm:ViewModelLocator x:Key="Locator"
+    			d:IsDataSource="True" />
+    		<clr:String x:Key="AppName">TechReads</clr:String>
+    	</ResourceDictionary>
     </Application.Resources>
 
     <Application.ApplicationLifetimeObjects>
