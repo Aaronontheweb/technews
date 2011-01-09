@@ -1,7 +1,13 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:Interactivity="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" xmlns:Command="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Extras.WP7" mc:Ignorable="d">
     <DataTemplate x:Key="FeedItemSummaryStyle">
         <StackPanel Orientation="Vertical" Width="397" Margin="0,0,0,5">
-            <TextBlock Margin="0" Style="{StaticResource PhoneTextLargeStyle}" TextWrapping="Wrap" Text="{Binding Title}" FontSize="16" FontFamily="Segoe WP" FontWeight="Bold"/>
+            <TextBlock Margin="0" Style="{StaticResource PhoneTextLargeStyle}" TextWrapping="Wrap" Text="{Binding Title}" FontSize="16" FontFamily="Segoe WP" FontWeight="Bold">
+                 <Interactivity:Interaction.Triggers>
+                    <Interactivity:EventTrigger EventName="MouseLeftButtonUp" x:Name="LinkClicked">
+                        <Command:EventToCommand Command="{Binding Main.NavigateToUri, Source={StaticResource Locator},Mode=OneWay}" CommandParameter="{Binding Link}"/>
+                    </Interactivity:EventTrigger>
+                </Interactivity:Interaction.Triggers>
+            </TextBlock>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width=".5*"/>
@@ -12,8 +18,8 @@
             </Grid>
         </StackPanel>
     </DataTemplate>
-	
-	<DataTemplate x:Key="PivotItemTemplate">
-			<ListBox HorizontalAlignment="Stretch" DataContext="{Binding Source={StaticResource Locator}}" ItemsSource="{Binding Main.FeedItems}" ItemTemplate="{StaticResource FeedItemSummaryStyle}" />
-		</DataTemplate>
+
+    <DataTemplate x:Key="PivotItemTemplate">
+        <ListBox HorizontalAlignment="Stretch" DataContext="{Binding Source={StaticResource Locator}}" ItemsSource="{Binding Main.FeedItems}" ItemTemplate="{StaticResource FeedItemSummaryStyle}" />
+    </DataTemplate>
 </ResourceDictionary>

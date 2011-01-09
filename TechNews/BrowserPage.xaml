@@ -4,8 +4,7 @@
                             xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
                             xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
                             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                            FontFamily="{StaticResource PhoneFontFamilyNormal}"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:Interactivity="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" xmlns:Command="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Extras.WP7" FontFamily="{StaticResource PhoneFontFamilyNormal}"
                             FontSize="{StaticResource PhoneFontSizeNormal}"
                             Foreground="{StaticResource PhoneForegroundBrush}"
                             SupportedOrientations="Portrait"
@@ -14,40 +13,39 @@
                             d:DesignWidth="480"
                             d:DesignHeight="768"
                             shell:SystemTray.IsVisible="True"
-                            DataContext="{Binding Main, Source={StaticResource Locator}}">
+                            DataContext="{Binding Browser, Source={StaticResource Locator}}">
 
-	<Grid x:Name="LayoutRoot"
+    <Grid x:Name="LayoutRoot"
 	      Background="Transparent">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto" />
-			<RowDefinition Height="*" />
-		</Grid.RowDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-		<StackPanel x:Name="TitlePanel"
+        <StackPanel x:Name="TitlePanel"
 		            Grid.Row="0"
 		            Margin="24,24,0,12">
-			<TextBlock x:Name="ApplicationTitle"
-			           Text="{Binding ApplicationTitle}"
-			           Style="{StaticResource PhoneTextNormalStyle}" />
-			<TextBlock x:Name="PageTitle"
-			           Text="{Binding PageName}"
-			           Margin="-3,-8,0,0"
-			           Style="{StaticResource PhoneTextTitle1Style}" />
-		</StackPanel>
+            <ProgressBar x:Name="progressBar" Height="10" IsIndeterminate="{Binding IsLoading}" Maximum="402" Visibility="{Binding IsProgressBarVisible, Mode=OneWay}"/>
 
-		<Grid x:Name="ContentGrid"
-		      Grid.Row="1">
+            <TextBlock x:Name="ApplicationTitle"
+			           Text="{StaticResource AppName}"
+			           Style="{StaticResource PhoneTextTitle2Style}" />
 
-			<TextBlock Text="{Binding Welcome}"
-			           Style="{StaticResource PhoneTextNormalStyle}"
-			           HorizontalAlignment="Center"
-			           VerticalAlignment="Center"
-			           FontSize="40" />
+        </StackPanel>
 
-		</Grid>
-	</Grid>
-    
-	<!-- Sample code showing usage of ApplicationBar
+        <Grid x:Name="ContentGrid" Grid.Row="1">
+            <TextBox x:Name="browserlocation" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="13.333" Height="56" Text="{Binding Uri.AbsoluteUri, Mode=OneWay}"/>
+            <phone:WebBrowser x:Name="browser" Margin="0,56,0,0" Source="{Binding Uri}" IsScriptEnabled="True">
+                <Interactivity:Interaction.Triggers>
+                    <Interactivity:EventTrigger EventName="LoadCompleted" x:Name="BrowserLoadCompleted">
+                        <Command:EventToCommand Command="{Binding NavigationComplete, Mode=OneWay}" PassEventArgsToCommand="True"/>
+                    </Interactivity:EventTrigger>
+                </Interactivity:Interaction.Triggers>
+            </phone:WebBrowser>
+        </Grid>
+    </Grid>
+
+    <!-- Sample code showing usage of ApplicationBar
     <phone:PhoneApplicationPage.ApplicationBar>
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
             <shell:ApplicationBarIconButton x:Name="appbar_button1" IconUri="/Images/appbar_button1.png" Text="Button 1"></shell:ApplicationBarIconButton>

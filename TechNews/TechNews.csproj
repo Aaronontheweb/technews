@@ -100,6 +100,7 @@
     <Compile Include="Model\IFeedQueryService.cs" />
     <Compile Include="Model\LocalFeedLocationService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModel\BrowserViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
   </ItemGroup>

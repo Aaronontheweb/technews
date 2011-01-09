@@ -4,8 +4,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Threading;
 using QDFeedParser;
 using TechNews.Design;
@@ -74,6 +76,8 @@ namespace TechNews.ViewModel
 
         #region Commands
 
+        public RelayCommand<string> NavigateToUri { get; private set; }
+
         public RelayCommand<SelectionChangedEventArgs> QueryFeed { get; private set; }
 
         public RelayCommand LoadTechCrunch { get; private set; }
@@ -110,6 +114,7 @@ namespace TechNews.ViewModel
                 _queryService = new FeedQueryService(new HttpFeedFactory());
                 QueryFeed = new RelayCommand<SelectionChangedEventArgs>(FindFeedAndExecuteQuery);
                 LoadTechCrunch = new RelayCommand(() => ExecuteQuery(Feeds[0]));
+                NavigateToUri = new RelayCommand<string>(uri => Messenger.Default.Send<string>(uri, "NavigationRequest"));
             }
         }
 
@@ -128,33 +133,24 @@ namespace TechNews.ViewModel
             _queryService.BeginQueryFeeds(feed.FeedUri, async =>
                                                             {
                                                                 var feedResult = _queryService.EndQueryFeeds(async);
-                                                                DispatcherHelper.CheckBeginInvokeOnUI(() => PopulateFeedItems
-                                                                                                                (FeedSummarizer
-                                                                                                                     .
-                                                                                                                     SummarizeFeed
-                                                                                                                     (feedResult,
-                                                                                                                      itemCount
-                                                                                                                          :
-                                                                                                                          feedResult
-                                                                                                                          .
-                                                                                                                          Items
-                                                                                                                          .
-                                                                                                                          Count)));
+                                                                var feedItems = FeedSummarizer.SummarizeFeed(feedResult, feedResult.Items.Count);
+                                                                DispatcherHelper.CheckBeginInvokeOnUI(() => PopulateFeedItems(feedItems));
+                                                                DispatcherHelper.CheckBeginInvokeOnUI(() => { IsLoading = false; });
 
                                                             });
         }
 
         private void PopulateFeedItems(IEnumerable<FeedItemSummary> summaries)
         {
-            var items = new ObservableCollection<FeedItemSummary>();
+            var newItems = new ObservableCollection<FeedItemSummary>();
+            //FeedItems.Clear();
             foreach (var summary in summaries)
             {
-                items.Add(summary);
+                //FeedItems.Add(summary);
+                newItems.Add(summary);
             }
 
-            FeedItems = items;
-
-            IsLoading = false;
+            FeedItems = newItems;
         }
 
         private void PopulateFeedTitles()

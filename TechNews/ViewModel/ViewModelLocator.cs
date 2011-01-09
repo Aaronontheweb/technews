@@ -14,6 +14,8 @@
   DataContext="{Binding Source={x:Static vm:ViewModelLocatorTemplate.ViewModelNameStatic}}"
 */
 
+using System;
+
 namespace TechNews.ViewModel
 {
     /// <summary>
@@ -56,6 +58,7 @@ namespace TechNews.ViewModel
     public class ViewModelLocator
     {
         private static MainViewModel _main;
+        private static BrowserViewModel _browser;
 
         /// <summary>
         /// Initializes a new instance of the ViewModelLocator class.
@@ -72,6 +75,42 @@ namespace TechNews.ViewModel
             ////}
 
             CreateMain();
+            CreateBrowser();
+        }
+
+        public static BrowserViewModel BrowserStatic
+        {
+            get
+            {
+                if(_browser == null)
+                {
+                    CreateBrowser();
+                }
+
+                return _browser;
+            }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance",
+            "CA1822:MarkMembersAsStatic",
+            Justification = "This non-static member is needed for data binding purposes.")]
+        public BrowserViewModel Browser
+        {
+            get { return BrowserStatic; }
+        }
+
+        public static void CreateBrowser()
+        {
+            if(_browser == null)
+            {
+                _browser = new BrowserViewModel();
+            }
+        }
+
+        public static void ClearBrowser()
+        {
+            _browser.Cleanup();
+            _browser = null;
         }
 
         /// <summary>
@@ -130,6 +169,7 @@ namespace TechNews.ViewModel
         public static void Cleanup()
         {
             ClearMain();
+            CreateBrowser();
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.Phone.Controls;
+﻿using System;
+using GalaSoft.MvvmLight.Messaging;
+using Microsoft.Phone.Controls;
 
 namespace TechNews
 {
@@ -13,6 +15,14 @@ namespace TechNews
         public BrowserPage()
         {
             InitializeComponent();
+        }
+
+        protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
+        {
+            var uriStart = e.Uri.OriginalString.IndexOf("http://");
+            var targetString = e.Uri.OriginalString.Substring(uriStart, e.Uri.OriginalString.Length - uriStart);
+            var targetUri = new Uri(targetString);
+            Messenger.Default.Send<Uri>(targetUri, "BrowserNavigationMessage");
         }
     }
 }
