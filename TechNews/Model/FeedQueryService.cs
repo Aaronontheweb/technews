@@ -15,7 +15,7 @@ namespace TechNews.Model
 {
     public class FeedQueryService : IFeedQueryService
     {
-        private TimeSpan CacheExpirationWindow { get; set; }
+        public TimeSpan CacheExpirationWindow { get; private set; }
         private static readonly TimeSpan DefaultCacheExpriationWindow = new TimeSpan(0,0,20,0);
 
         private IFeedFactory Factory { get; set; }
@@ -41,6 +41,11 @@ namespace TechNews.Model
         {
             var feedData = Factory.EndCreateFeed(result);
             return feedData;
+        }
+
+        public IFeed CreateFeed(string xml, Uri feeduri)
+        {
+            return Factory.CreateFeed(feeduri, Factory.CheckFeedType(xml), xml);
         }
 
         #endregion

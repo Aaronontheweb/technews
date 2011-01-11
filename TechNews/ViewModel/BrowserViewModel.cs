@@ -34,11 +34,24 @@ namespace TechNews.ViewModel
             }
         }
 
+        private Uri _browserUri;
+        public Uri BrowserUri
+        {
+            get { return _browserUri; }
+            set
+            {
+                if (_browserUri == value) return;
+                _browserUri = value;
+                RaisePropertyChanged("BrowserUri");
+            }
+        }
+
         private Uri _uri;
         public Uri Uri
         {
             get { return _uri; }
-            set { 
+            set {
+                if (_uri == value) return;
                 _uri = value;
                 RaisePropertyChanged("Uri");
             }
@@ -71,7 +84,7 @@ namespace TechNews.ViewModel
 
                 NavigationComplete = new RelayCommand<NavigationEventArgs>(args => DispatcherHelper.CheckBeginInvokeOnUI(() =>
                                                                                                                              {
-                                                                                                                                 Uri = args.Uri;
+                                                                                                                                 BrowserUri = args.Uri;
                                                                                                                                  IsLoading = false;
                                                                                                                              }));
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,6 +10,7 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Threading;
+using IsolatedStorageExtensions;
 using QDFeedParser;
 using TechNews.Design;
 using TechNews.Helpers;
@@ -31,8 +33,10 @@ namespace TechNews.ViewModel
     public class MainViewModel : ViewModelBase
     {
         private readonly IFeedLocationService _feedLocator;
-        private readonly IFeedQueryService _queryService;
-
+        private readonly IFeedQueryService _remoteQueryService;
+        private readonly IFeedQueryService _localQueryService;
+        private IFeedQueryService _activeQueryService;
+        private IDictionary<Uri, DateTime> CacheDictionary;
 
         //Used for quick and easy computation
 
@@ -92,7 +96,7 @@ namespace TechNews.ViewModel
             _feedLocator = new LocalFeedLocationService();
             Feeds = _feedLocator.GetFeeds();
             FeedTitles = new ObservableCollection<string>();
-
+            CacheDictionary = new Dictionary<Uri, DateTime>();
             PopulateFeedTitles();
 
             FeedItems = new ObservableCollection<FeedItemSummary>();
@@ -111,7 +115,9 @@ namespace TechNews.ViewModel
             {
                 // Code runs "for real"
 
-                _queryService = new FeedQueryService(new HttpFeedFactory());
+                _remoteQueryService = new FeedQueryService(new HttpFeedFactory());
+                _localQueryService = new FeedQueryService(new IsolatedStorageFeedFactory());
+
                 QueryFeed = new RelayCommand<SelectionChangedEventArgs>(FindFeedAndExecuteQuery);
                 LoadTechCrunch = new RelayCommand(() => ExecuteQuery(Feeds[0]));
                 NavigateToUri = new RelayCommand<string>(uri => Messenger.Default.Send<string>(uri, "NavigationRequest"));
@@ -130,23 +136,53 @@ namespace TechNews.ViewModel
         private void ExecuteQuery(ParentFeed feed)
         {
             IsLoading = true;
-            _queryService.BeginQueryFeeds(feed.FeedUri, async =>
-                                                            {
-                                                                var feedResult = _queryService.EndQueryFeeds(async);
-                                                                var feedItems = FeedSummarizer.SummarizeFeed(feedResult, feedResult.Items.Count);
-                                                                DispatcherHelper.CheckBeginInvokeOnUI(() => PopulateFeedItems(feedItems));
-                                                                DispatcherHelper.CheckBeginInvokeOnUI(() => { IsLoading = false; });
 
-                                                            });
+            var filepath = IsolatedStorageHelper.GetSafeFileName(feed.FeedUri.LocalPath + ".xml");
+            var queryUri = feed.FeedUri;
+            if(IsolatedStorageHelper.FileExists(filepath) 
+                && CacheDictionary.ContainsKey(feed.FeedUri)
+                && DateTime.UtcNow - CacheDictionary[feed.FeedUri] < _remoteQueryService.CacheExpirationWindow)
+            {
+                _activeQueryService = _localQueryService;
+                queryUri = new Uri(filepath, UriKind.Relative);
+            }
+            else
+            {
+                _activeQueryService = _remoteQueryService;
+            }
+             
+
+            _activeQueryService.BeginQueryFeeds(queryUri, async =>
+                {
+                    
+                    var feedResult = _activeQueryService.EndQueryFeeds(async);
+
+                    var feedItemSummaries = FeedSummarizer.SummarizeFeed(feedResult, feed, feedResult.Items.Count);
+
+                    DispatcherHelper.CheckBeginInvokeOnUI(() => PopulateFeedItems(feedItemSummaries));
+                    DispatcherHelper.CheckBeginInvokeOnUI(() => { IsLoading = false; });
+
+                    //Cache the file to Isolated Storage
+                    if (_activeQueryService.GetHashCode() == _remoteQueryService.GetHashCode())
+                    {
+                        IsolatedStorageHelper.MakeFile(feedResult.XmlFeed, filepath);
+                        if (CacheDictionary.ContainsKey(feedResult.FeedUri))
+                            CacheDictionary[feedResult.FeedUri] = DateTime.UtcNow;
+                        else
+                        {
+                            CacheDictionary.Add(feedResult.FeedUri, DateTime.UtcNow);
+                        }
+                    }
+                        
+
+                });
         }
 
         private void PopulateFeedItems(IEnumerable<FeedItemSummary> summaries)
         {
             var newItems = new ObservableCollection<FeedItemSummary>();
-            //FeedItems.Clear();
             foreach (var summary in summaries)
             {
-                //FeedItems.Add(summary);
                 newItems.Add(summary);
             }
 

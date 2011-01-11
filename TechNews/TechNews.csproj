@@ -50,17 +50,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GalaSoft.MvvmLight.WP7">
+    <Reference Include="GalaSoft.MvvmLight.Extras.WP7, Version=3.0.0.27837, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="GalaSoft.MvvmLight.WP7, Version=3.0.0.27833, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="IsolatedStorageExtensions.Mobile, Version=0.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Laurent Bugnion (GalaSoft)\Mvvm Light Toolkit\Binaries\WP7\GalaSoft.MvvmLight.WP7.dll</HintPath>
-    </Reference>
-    <Reference Include="GalaSoft.MvvmLight.Extras.WP7">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Laurent Bugnion (GalaSoft)\Mvvm Light Toolkit\Binaries\WP7\GalaSoft.MvvmLight.Extras.WP7.dll</HintPath>
+      <HintPath>..\Lib\IsolatedStorageExtensions.Mobile.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Phone.Controls" />
-    <Reference Include="QDFeedParser.Mobile">
-      <HintPath>..\..\..\qdrss-releases\qdrss 1.0\bin\Windows Phone 7\Release\QDFeedParser.Mobile.dll</HintPath>
+    <Reference Include="QDFeedParser.Mobile, Version=1.0.0.5, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\QDFeedParser.Mobile.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Interactivity">
       <SpecificVersion>False</SpecificVersion>
@@ -75,12 +74,6 @@
     <Reference Include="System.Net" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="WindowsPhoneSterling">
-      <HintPath>..\..\..\..\Users\Aaron\Documents\Public .NET Components\SterlingDB\src\SterlingSln\WindowsPhoneSterling\Bin\Release\WindowsPhoneSterling.dll</HintPath>
-    </Reference>
-    <Reference Include="Wintellect.Sterling.WindowsPhone">
-      <HintPath>..\..\..\..\Users\Aaron\Documents\Public .NET Components\SterlingDB\src\SterlingSln\WindowsPhoneSterling\Bin\Release\Wintellect.Sterling.WindowsPhone.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -137,7 +130,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.$(TargetFrameworkProfile).Overrides.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

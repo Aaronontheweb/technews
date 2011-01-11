@@ -15,7 +15,9 @@ namespace TechNews.Model
 {
     public interface IFeedQueryService
     {
+        TimeSpan CacheExpirationWindow { get; }
         IAsyncResult BeginQueryFeeds(Uri uri, AsyncCallback callback);
         IFeed EndQueryFeeds(IAsyncResult result);
+        IFeed CreateFeed(string xml, Uri feeduri);
     }
 }

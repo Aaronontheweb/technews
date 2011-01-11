@@ -34,7 +34,7 @@
         </StackPanel>
 
         <Grid x:Name="ContentGrid" Grid.Row="1">
-            <TextBox x:Name="browserlocation" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="13.333" Height="56" Text="{Binding Uri.AbsoluteUri, Mode=OneWay}"/>
+            <TextBox x:Name="browserlocation" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="13.333" Height="56" Text="{Binding BrowserUri.AbsoluteUri, Mode=OneWay}"/>
             <phone:WebBrowser x:Name="browser" Margin="0,56,0,0" Source="{Binding Uri}" IsScriptEnabled="True">
                 <Interactivity:Interaction.Triggers>
                     <Interactivity:EventTrigger EventName="LoadCompleted" x:Name="BrowserLoadCompleted">
