@@ -34,9 +34,8 @@ namespace TechNews.ViewModel
     {
         private readonly IFeedLocationService _feedLocator;
         private readonly IFeedQueryService _remoteQueryService;
-        private readonly IFeedQueryService _localQueryService;
         private IFeedQueryService _activeQueryService;
-        private IDictionary<Uri, DateTime> CacheDictionary;
+        public IDictionary<Uri, KeyValuePair<DateTime, IList<FeedItemSummary>>> CacheDictionary { get; set; }
 
         //Used for quick and easy computation
 
@@ -96,7 +95,7 @@ namespace TechNews.ViewModel
             _feedLocator = new LocalFeedLocationService();
             Feeds = _feedLocator.GetFeeds();
             FeedTitles = new ObservableCollection<string>();
-            CacheDictionary = new Dictionary<Uri, DateTime>();
+            CacheDictionary = new Dictionary<Uri, KeyValuePair<DateTime, IList<FeedItemSummary>>>();
             PopulateFeedTitles();
 
             FeedItems = new ObservableCollection<FeedItemSummary>();
@@ -116,7 +115,6 @@ namespace TechNews.ViewModel
                 // Code runs "for real"
 
                 _remoteQueryService = new FeedQueryService(new HttpFeedFactory());
-                _localQueryService = new FeedQueryService(new IsolatedStorageFeedFactory());
 
                 QueryFeed = new RelayCommand<SelectionChangedEventArgs>(FindFeedAndExecuteQuery);
                 LoadTechCrunch = new RelayCommand(() => ExecuteQuery(Feeds[0]));
@@ -139,43 +137,38 @@ namespace TechNews.ViewModel
 
             var filepath = IsolatedStorageHelper.GetSafeFileName(feed.FeedUri.LocalPath + ".xml");
             var queryUri = feed.FeedUri;
-            if(IsolatedStorageHelper.FileExists(filepath) 
-                && CacheDictionary.ContainsKey(feed.FeedUri)
-                && DateTime.UtcNow - CacheDictionary[feed.FeedUri] < _remoteQueryService.CacheExpirationWindow)
+            if(CacheDictionary.ContainsKey(feed.FeedUri)
+                && DateTime.UtcNow - CacheDictionary[feed.FeedUri].Key < _remoteQueryService.CacheExpirationWindow)
             {
-                _activeQueryService = _localQueryService;
-                queryUri = new Uri(filepath, UriKind.Relative);
+                UpdateBindings(CacheDictionary[feed.FeedUri].Value);
             }
             else
             {
-                _activeQueryService = _remoteQueryService;
-            }
-             
-
-            _activeQueryService.BeginQueryFeeds(queryUri, async =>
+                _remoteQueryService.BeginQueryFeeds(queryUri, async =>
                 {
                     
-                    var feedResult = _activeQueryService.EndQueryFeeds(async);
+                    var feedResult = _remoteQueryService.EndQueryFeeds(async);
 
                     var feedItemSummaries = FeedSummarizer.SummarizeFeed(feedResult, feed, feedResult.Items.Count);
 
-                    DispatcherHelper.CheckBeginInvokeOnUI(() => PopulateFeedItems(feedItemSummaries));
-                    DispatcherHelper.CheckBeginInvokeOnUI(() => { IsLoading = false; });
+                    UpdateBindings(feedItemSummaries);
 
                     //Cache the file to Isolated Storage
-                    if (_activeQueryService.GetHashCode() == _remoteQueryService.GetHashCode())
-                    {
-                        IsolatedStorageHelper.MakeFile(feedResult.XmlFeed, filepath);
+                  
                         if (CacheDictionary.ContainsKey(feedResult.FeedUri))
-                            CacheDictionary[feedResult.FeedUri] = DateTime.UtcNow;
-                        else
-                        {
-                            CacheDictionary.Add(feedResult.FeedUri, DateTime.UtcNow);
-                        }
-                    }
+                            CacheDictionary.Remove(feedResult.FeedUri);
+                            CacheDictionary.Add(feedResult.FeedUri, new KeyValuePair<DateTime, IList<FeedItemSummary>>(DateTime.UtcNow, feedItemSummaries));
                         
 
                 });
+            }
+             
+
+        }
+
+        private void UpdateBindings(IEnumerable<FeedItemSummary> feedItemSummaries)
+        {
+            DispatcherHelper.CheckBeginInvokeOnUI(() => { PopulateFeedItems(feedItemSummaries); IsLoading = false; });
         }
 
         private void PopulateFeedItems(IEnumerable<FeedItemSummary> summaries)
