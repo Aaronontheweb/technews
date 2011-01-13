@@ -34,26 +34,32 @@ namespace TechNews.ViewModel
             }
         }
 
+        /// <summary>
+        /// Uri to which the Uri display binds
+        /// </summary>
+        private Uri _displayUri;
+        public Uri DisplayUri
+        {
+            get { return _displayUri; }
+            set
+            {
+                if (_displayUri == value) return;
+                _displayUri = value;
+                RaisePropertyChanged("DisplayUri");
+            }
+        }
+
+        /// <summary>
+        /// Uri to which the browser control itself binds
+        /// </summary>
         private Uri _browserUri;
         public Uri BrowserUri
         {
             get { return _browserUri; }
-            set
-            {
+            set {
                 if (_browserUri == value) return;
                 _browserUri = value;
                 RaisePropertyChanged("BrowserUri");
-            }
-        }
-
-        private Uri _uri;
-        public Uri Uri
-        {
-            get { return _uri; }
-            set {
-                if (_uri == value) return;
-                _uri = value;
-                RaisePropertyChanged("Uri");
             }
         }
 
@@ -78,13 +84,14 @@ namespace TechNews.ViewModel
                                                 uri => DispatcherHelper.CheckBeginInvokeOnUI(() =>
                                                                                                  {
                                                                                                      IsLoading = true;
-                                                                                                     Uri = uri;
+                                                                                                     DisplayUri = uri;
+                                                                                                     BrowserUri = uri;
                                                                                                  }));
 
 
                 NavigationComplete = new RelayCommand<NavigationEventArgs>(args => DispatcherHelper.CheckBeginInvokeOnUI(() =>
                                                                                                                              {
-                                                                                                                                 BrowserUri = args.Uri;
+                                                                                                                                 DisplayUri = args.Uri;
                                                                                                                                  IsLoading = false;
                                                                                                                              }));
             }

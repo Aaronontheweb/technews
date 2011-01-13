@@ -86,7 +86,6 @@
     <Compile Include="Design\DesignTimeData.cs" />
     <Compile Include="Helpers\FeedSummarizer.cs" />
     <Compile Include="Helpers\SmartObservableCollection.cs" />
-    <Compile Include="PerformanceProfiling\VisualTreeHelper.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

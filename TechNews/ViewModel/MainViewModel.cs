@@ -22,13 +22,19 @@ namespace TechNews.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
+        //Service used for populating the list of feeds on the pivot
         private readonly IFeedLocationService _feedLocator;
+
+        //Service used for querying remote feeds
         private readonly IFeedQueryService _remoteQueryService;
-        private object _cacheLock = new object();
+
+        //Locking mechanism used for synchronizing access to the cache
+        private readonly object _cacheLock = new object();
+
+        //In-memory cache dictionary
         public IDictionary<Uri, KeyValuePair<DateTime, IList<FeedItemSummary>>> CacheDictionary { get; set; }
 
-        //Used for quick and easy computation
-
+        //Used for tolling the IsInDeterminate field of the progress bar
         private bool _isLoading;
 
         public bool IsLoading
@@ -41,6 +47,8 @@ namespace TechNews.ViewModel
                 RaisePropertyChanged("IsProgressBarVisible");
             }
         }
+
+        //Used for toggling the visibility property of the progress bar
         public Visibility IsProgressBarVisible
         {
             get
@@ -49,24 +57,32 @@ namespace TechNews.ViewModel
             }
         }
 
-        private ParentFeed _currentFeedUri;
-        public ParentFeed CurrentFeedUri
-        {
-            get { return _currentFeedUri; }
-            set
-            {
-                _currentFeedUri = value;
-            }
-        }
+        //Uri of the feed currently being viewed by the end-user
+        public ParentFeed CurrentFeedUri { get; set; }
 
+        //Internal collection of FeedItemSummaries to which the UI binds
         private SmartObservableCollection<FeedItemSummary> _feedItems;
+
+        //Internal collection of FeedTitles to which the UI binds
         private ObservableCollection<string> _feedTitles;
+
+        //Internal dictionary of feed URIs, used for resolving the URI of the current feed based on the title
+        // - the SelectionChanged event raised by the pivot control only passes the name back, so this is why we have to do a name-lookup
         private IList<ParentFeed> _feeds;
 
+        /// <summary>
+        /// The names of all of the titles in the feed, to which the UI binds
+        /// </summary>
         public ObservableCollection<string> FeedTitles { get { return _feedTitles; } set { _feedTitles = value; RaisePropertyChanged("FeedTitles"); } }
 
+        /// <summary>
+        /// All of the feeds
+        /// </summary>
         public IList<ParentFeed> Feeds { get { return _feeds; } set { _feeds = value; RaisePropertyChanged("Feeds"); } }
 
+        /// <summary>
+        /// The feed items which populate the current list in the UI
+        /// </summary>
         public SmartObservableCollection<FeedItemSummary> FeedItems
         {
             get { return _feedItems; }
@@ -79,17 +95,37 @@ namespace TechNews.ViewModel
 
         #region Commands
 
+        /// <summary>
+        /// Command used for browsing to a specific item in a list of feed items
+        /// </summary>
         public RelayCommand<string> NavigateToUri { get; private set; }
 
+        /// <summary>
+        /// Resolves the URI of the current feed selected in the pivot
+        /// </summary>
         public RelayCommand<SelectionChangedEventArgs> LocateFeedUri { get; private set; }
 
+        /// <summary>
+        /// Loads the last or the default feed
+        /// </summary>
         public RelayCommand LoadLastOrDefaultFeed { get; private set; }
 
+        /// <summary>
+        /// Turns on the loading bar
+        /// </summary>
         public RelayCommand BeginLoading { get; private set; }
 
+        /// <summary>
+        /// Turns off the loading bar
+        /// </summary>
         public RelayCommand EndLoading { get; private set; }
 
+        /// <summary>
+        /// Binds the elements of the active list
+        /// </summary>
         public RelayCommand PopulateItemsList { get; private set; }
+
+        public RelayCommand BuildAllItems { get; private set; }
 
         #endregion
 
@@ -99,13 +135,13 @@ namespace TechNews.ViewModel
         public MainViewModel()
         {
             _feedLocator = new LocalFeedLocationService();
-            Feeds = _feedLocator.GetFeeds();
-            CurrentFeedUri = Feeds[0];
-            FeedTitles = new ObservableCollection<string>();
             CacheDictionary = new Dictionary<Uri, KeyValuePair<DateTime, IList<FeedItemSummary>>>();
-            PopulateFeedTitles();
-
+            FeedTitles = new ObservableCollection<string>();
             FeedItems = new SmartObservableCollection<FeedItemSummary>();
+
+            Feeds = _feedLocator.GetFeeds(); //Initialize the feeds collection
+            CurrentFeedUri = Feeds[0]; //Initialize the CurrentFeedUri
+            PopulateFeedTitles(); //Initialize the feed titles collection
 
             if (IsInDesignMode)
             {
@@ -128,6 +164,8 @@ namespace TechNews.ViewModel
                                                                                                 {
                                                                                                     IsLoading = true;
                                                                                                 }));
+
+
                 PopulateItemsList = new RelayCommand(() =>
                                                          {
                                                              if (FeedIsInCache(CurrentFeedUri.FeedUri))
@@ -139,11 +177,20 @@ namespace TechNews.ViewModel
                                                                  ExecuteQuery(CurrentFeedUri, bind: true);
                                                              }
                                                          });
+
                 EndLoading = new RelayCommand(() => DispatcherHelper.CheckBeginInvokeOnUI(() =>
                                                                                               {
                                                                                                   if(FeedIsInCache(CurrentFeedUri.FeedUri))
                                                                                                     IsLoading = false;
                                                                                               }));
+
+                BuildAllItems = new RelayCommand(() =>
+                                                     {
+                                                         foreach(var feed in Feeds)
+                                                         {
+                                                             ExecuteQuery(feed);
+                                                         }
+                                                     });
             }
         }
 
@@ -165,11 +212,10 @@ namespace TechNews.ViewModel
 
                 var feedItemSummaries = FeedSummarizer.SummarizeFeed(feedResult, feed, feedResult.Items.Count);
 
-                //Cache the processed feed to memory
-
-
+                //Synchronize access to the cache
                 lock (_cacheLock)
                 {
+                    //Cache the processed feed to memory
                     if (CacheDictionary.ContainsKey(feedResult.FeedUri))
                         CacheDictionary.Remove(feedResult.FeedUri);
                     CacheDictionary.Add(feedResult.FeedUri,
@@ -177,6 +223,7 @@ namespace TechNews.ViewModel
                                                                                            feedItemSummaries));
                 }
 
+                //Perform a UI bind update if one is requested
                 if (bind)
                 {
                     UpdateBindings(feedItemSummaries);
@@ -212,15 +259,10 @@ namespace TechNews.ViewModel
 
         private void PopulateFeedTitles()
         {
-            GC.Collect();
-            DebugWatch.Start();
             foreach (var item in Feeds)
             {
                 FeedTitles.Add(item.Title);
             }
-            DebugWatch.Stop();
-            DebugWatch.Print("PopulateFeedTitles Method");
-            DebugWatch.Reset();
         }
 
         ////public override void Cleanup()
