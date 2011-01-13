@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Net;
 using System.Windows;
@@ -11,6 +12,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using GalaSoft.MvvmLight.Threading;
+using IsolatedStorageExtensions;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using TechNews.ViewModel;
@@ -26,8 +28,6 @@ namespace TechNews
         // Constructor
         public App()
         {
-            // Global handler for uncaught exceptions. 
-            // Note that exceptions thrown by ApplicationBarItem.Click will not get caught here.
             UnhandledException += Application_UnhandledException;
 
             // Standard Silverlight initialization

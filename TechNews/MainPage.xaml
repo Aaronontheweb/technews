@@ -28,7 +28,7 @@
 		<StackPanel x:Name="TitlePanel"
 		            Grid.Row="0"
 		            Margin="24,24,0,12">
-			<ProgressBar x:Name="progressBar" Height="10" IsIndeterminate="{Binding IsLoading}" Maximum="402" Visibility="{Binding IsProgressBarVisible, Mode=OneWay}"/>
+			<ProgressBar x:Name="progressBar" Height="10" IsIndeterminate="{Binding IsLoading}" Maximum="402" Style="{StaticResource PerformanceProgressBar}" Visibility="{Binding IsProgressBarVisible}"/>
 
 			<TextBlock x:Name="ApplicationTitle"
 			           Text="{StaticResource AppName}"
@@ -42,10 +42,17 @@
             <controls:Pivot x:Name="feedPivot" Margin="0,0,0,8" ItemsSource="{Binding FeedTitles, Mode=OneWay}" ItemTemplate="{StaticResource PivotItemTemplate}">
                 <Interactivity:Interaction.Triggers>
                     <Interactivity:EventTrigger EventName="Loaded" x:Name="PivotLoaded">
-                        <Command:EventToCommand Command="{Binding LoadTechCrunch, Mode=OneWay}"/>
+                        <Command:EventToCommand Command="{Binding BeginLoading, Mode=OneWay}" PassEventArgsToCommand="False"/>
                     </Interactivity:EventTrigger>
                     <Interactivity:EventTrigger EventName="SelectionChanged" x:Name="PivotSelectionChanged">
-                        <Command:EventToCommand Command="{Binding QueryFeed, Mode=OneWay}" PassEventArgsToCommand="True"/>
+                        <Command:EventToCommand Command="{Binding LocateFeedUri, Mode=OneWay}" PassEventArgsToCommand="True"/>
+                    </Interactivity:EventTrigger>
+                    <Interactivity:EventTrigger EventName="LoadingPivotItem" x:Name="LoadingPivotItem">
+                        <Command:EventToCommand Command="{Binding BeginLoading, Mode=OneWay}" PassEventArgsToCommand="False"/>
+                    </Interactivity:EventTrigger>
+                    <Interactivity:EventTrigger EventName="LoadedPivotItem" x:Name="LoadedPivotItem">
+                        <Command:EventToCommand Command="{Binding PopulateItemsList, Mode=OneWay}" PassEventArgsToCommand="False"/>
+                        <Command:EventToCommand Command="{Binding EndLoading, Mode=OneWay}" PassEventArgsToCommand="False"/>
                     </Interactivity:EventTrigger>
                 </Interactivity:Interaction.Triggers>
             </controls:Pivot>
